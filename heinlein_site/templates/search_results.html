@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+
+    body {
+        background-image: url('{{ url_for("static", filename="images/starship_troops_4k_44.png") }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        min-height: 100vh;
+    }
+    th a.sortable-header { text-shadow: 1px 1px 3px rgba(0,0,0,0.5); color: inherit; text-decoration: none; }
+    th a.sortable-header:hover { text-decoration: underline; }
+    
+    .card-cover { height: 250px; object-fit: cover; object-position: center; border-top-left-radius: 0.375rem; border-top-right-radius: 0.375rem; }
+    .card-work { transition: transform 0.2s, box-shadow 0.2s; }
+    .card-work:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    .form-switch .form-check-input { height: 1.4em; width: 2.8em; }
+    .form-check-label { font-size: 0.85em; }
+    .sort-icon { margin-left: 6px; opacity: 0.8; }
+    
+    .search-header-container {
+        background-color: rgba(0, 0, 0, 0.4); 
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+    .search-header-container h2, .search-header-container label, .search-header-container button, .search-header-container .form-control {
+        color: white !important;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    }
+    .search-header-container .form-control {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+    .search-header-container .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4 search-header-container">
+    <div class="col-12 col-md-5">
+        <h2 class="mb-2 mb-md-0 text-white">Результаты поиска: «<span class="text-primary">{{ query }}</span>»</h2>
+    </div>
+    <div class="col-12 col-md-7 d-flex justify-content-end align-items-center gap-3">
+        <form id="searchForm" action="{{ url_for('search') }}" method="get" class="d-flex flex-grow-1 align-items-center gap-2">
+            <input type="text" name="q" class="form-control form-control-sm" placeholder="Новый поиск..." value="{{ query }}" required>
+            <div class="form-check form-switch d-flex align-items-center">
+                <input class="form-check-input" type="checkbox" id="searchModeResults" {% if search_mode == 'ml' %}checked{% endif %}>
+                <label class="form-check-label text-white" for="searchModeResults">Семантический / Точный</label>
+            </div>
+            <input type="hidden" name="mode" id="modeHiddenResults" value="{{ search_mode }}">
+            <button type="submit" class="btn btn-primary btn-sm">Найти</button>
+        </form>
+
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-secondary btn-sm" id="tableViewBtn" onclick="setView('table')">List</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="cardViewBtn" onclick="setView('card')">Grid</button>
+        </div>
+    </div>
+</div>
+
+{% if works %}
+    <div id="tableView" style="display: none;" class="bg-white rounded shadow-lg p-4 mb-3">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle shadow-sm" id="resultsTable">
+                <thead class="table-dark">
+                    <tr>
+                        {% macro sort_link(col, label) %}
+                            {% set order = 'desc' if current_sort_by == col and current_sort_dir == 'asc' else 'asc' %}
+                            <th scope="col">
+                                <a href="#" class="sortable-header {% if current_sort_by == col %}fw-bold{% endif %}"
+                                   onclick="sortColumn('{{ col }}', '{{ order }}'); return false;">
+                                    {{ label }}
+                                    <span class="sort-icon">
+                                        {% if current_sort_by == col %}
+                                            {% if current_sort_dir == 'asc' %}▲{% else %}▼{% endif %}
+                                        {% else %}↕{% endif %}
+                                    </span>
+                                </a>
+                            </th>
+                        {% endmacro %}
+                        {{ sort_link('year', 'Год') }}
+                        {{ sort_link('type', 'Тип') }}
+                        {{ sort_link('title_ru', 'Название (RU)') }}
+                        {{ sort_link('title_original', 'Оригинал') }}
+                        {{ sort_link('cycle', 'Цикл') }}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for work in works %}
+                    <tr>
+                        <td class="fw-bold">{{ work.publication_year }}</td>
+                        <td><span class="badge bg-secondary">{{ work.work_type }}</span></td>
+                        <td>
+                            <a href="{{ url_for('work_detail', work_id=work.id) }}" class="fw-bold text-decoration-none">
+                                {{ work.title_ru }}
+                            </a>
+                        </td>
+                        <td class="text-muted">{{ work.title_original or '' }}</td>
+                        <td>
+                            {% if work.cycle_title %}
+                                <span class="text-info">{{ work.cycle_title }}</span>
+                                {% if work.cycle_order %}
+                                    <small class="text-muted">(#{{ work.cycle_order }})</small>
+                                {% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="cardView" style="display: none;" class="bg-white rounded shadow-lg p-4 mb-3">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for work in works %}
+            <div class="col">
+                <a href="{{ url_for('work_detail', work_id=work.id) }}" class="text-decoration-none text-dark d-block">
+                    <div class="card h-100 shadow-sm card-work">
+                        <img src="https://placehold.co/300x250/34495e/ffffff?text={{ work.title_ru|truncate(15, True, '...')|urlencode }}"
+                             class="card-img-top card-cover" alt="{{ work.title_ru }}"
+                             onerror="this.onerror=null; this.src='https://placehold.co/300x250/34495e/ffffff?text=Обложка+недоступна'">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold mb-1">{{ work.title_ru }}</h5>
+                            <p class="card-text text-muted small mb-1">{{ work.title_original or '' }}</p>
+                            <p class="mb-2">
+                                <span class="badge bg-info text-dark me-2">{{ work.publication_year }}</span>
+                                <span class="badge bg-secondary">{{ work.work_type }}</span>
+                            </p>
+                            <div class="mt-auto">
+                                {% if work.cycle_title %}
+                                    <small class="text-primary fw-medium">{{ work.cycle_title }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <p class="text-white mt-4 text-shadow-sm">Найдено записей: {{ works|length }}</p>
+
+{% else %}
+<div class="alert alert-warning text-center p-5 bg-white rounded shadow-lg">
+    <h4>Ничего не найдено</h4>
+    <p>По вашему запросу «{{ query }}» произведений не найдено.</p>
+    <p class="mt-3">
+        <a href="{{ url_for('search') }}?q={{ query|urlencode }}&mode=ml" class="btn btn-primary">Переключиться на семантический поиск (ML)</a>
+        <a href="{{ url_for('search') }}?q={{ query|urlencode }}&mode=sql" class="btn btn-secondary ms-2">Повторить SQL-поиск</a>
+    </p>
+    <a href="{{ url_for('index') }}" class="btn btn-link mt-3 d-block">На главную</a>
+</div>
+{% endif %}
+
+<script>
+function setView(view) {
+    const table = document.getElementById('tableView');
+    const cards = document.getElementById('cardView');
+    const btnTable = document.getElementById('tableViewBtn');
+    const btnCards = document.getElementById('cardViewBtn');
+
+    if (!table || !cards || !btnTable || !btnCards) return;
+
+    if (view === 'table') {
+        table.style.display = 'block';
+        cards.style.display = 'none';
+        btnTable.classList.add('btn-primary', 'active');
+        btnTable.classList.remove('btn-secondary');
+        btnCards.classList.add('btn-secondary');
+        btnCards.classList.remove('btn-primary', 'active');
+    } else {
+        table.style.display = 'none';
+        cards.style.display = 'block';
+        btnCards.classList.add('btn-primary', 'active');
+        btnCards.classList.remove('btn-secondary');
+        btnTable.classList.add('btn-secondary');
+        btnTable.classList.remove('btn-primary', 'active');
+    }
+    try { localStorage.setItem('viewMode', view); } catch(e){/* ignore */ }
+}
+
+function sortColumn(col, order) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('sort_by', col);
+    params.set('sort_dir', order);
+    const modeElem = document.getElementById('modeHiddenResults');
+    const mode = modeElem ? modeElem.value : null;
+    if (mode) params.set('mode', mode);
+    window.location.search = params.toString();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedView = localStorage.getItem('viewMode') || 'table';
+    setView(savedView);
+
+    const checkbox = document.getElementById('searchModeResults');
+    const hidden = document.getElementById('modeHiddenResults');
+    const searchForm = document.getElementById('searchForm');
+
+    if (checkbox && hidden) {
+        const sync = () => {
+            hidden.value = checkbox.checked ? 'ml' : 'sql';
+            console.log('sync hidden ->', hidden.value);
+        };
+        checkbox.addEventListener('change', () => {
+            sync();
+        });
+
+        sync();
+    }
+
+    if (searchForm && checkbox && hidden) {
+        searchForm.addEventListener('submit', (e) => {
+            hidden.value = checkbox.checked ? 'ml' : 'sql';
+        });
+    }
+
+});
+</script>
+
+{% endblock %}

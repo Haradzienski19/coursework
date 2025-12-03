@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <img src="{{ work.cover_url }}" alt="Обложка" class="img-fluid rounded shadow-sm mb-4">
+        
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('edit_work', work_id=work.id) }}" class="btn btn-warning w-100 mb-3">✏️ Редактировать</a>
+        {% endif %}
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light fw-bold">Сведения</div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Год публикации:</strong> <span>{{ work.publication_year }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Тип:</strong> <span class="badge bg-primary">{{ work.work_type }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <h1 class="mb-0">{{ work.title_ru }}</h1>
+        <p class="text-muted lead mb-4">({{ work.title_original }})</p>
+
+        {% if work.cycle %}
+        <div class="alert alert-info py-2 small">
+            Часть цикла: <strong>{{ work.cycle.title_ru }}</strong>
+            {% if work.cycle_order %}(Порядок: #{{ work.cycle_order }}){% endif %}
+        </div>
+        {% endif %}
+
+        <h3 class="mb-3 mt-4 border-bottom pb-2">Описание</h3>
+        <p>{{ work.description }}</p>
+        
+        {% if work.publisher %}
+        <h3 class="mb-3 mt-4 border-bottom pb-2">Издательство</h3>
+        <p>Издано: {{ work.publisher.name }}
+        {% if work.publisher.website %}
+            (<a href="{{ work.publisher.website }}" target="_blank">Сайт</a>)
+        {% endif %}
+        </p>
+        {% endif %}
+
+        {% if keywords %}
+        <h3 class="mb-3 mt-4 border-bottom pb-2">Ключевые слова</h3>
+        <div class="d-flex flex-wrap gap-2">
+            {% for keyword in keywords %}
+            <span class="badge bg-success text-white p-2">{{ keyword }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if adaptations %}
+        <h3 class="mb-3 mt-4 border-bottom pb-2">Экранизации</h3>
+        <ul class="list-group list-group-flush">
+            {% for ad in adaptations %}
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>{{ ad.title }}</strong>
+                    <span class="badge bg-dark">{{ ad.release_year }}</span>
+                </div>
+                <div class="small text-muted">{{ ad.type }}</div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+<div class="mt-5">
+    <a href="javascript:history.back()" class="btn btn-outline-secondary">← Назад</a>
+</div>
+{% endblock %}

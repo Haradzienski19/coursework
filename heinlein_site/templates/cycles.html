@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <h4>Создать цикл</h4>
+        <form method="post" class="card p-3 bg-light">
+            <div class="mb-3">
+                <label class="form-label">Название цикла (RU)</label>
+                <input type="text" class="form-control" name="title_ru" required placeholder="Например: История будущего">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Оригинальное название</label>
+                <input type="text" class="form-control" name="title_original" placeholder="Например: Future History">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Описание</label>
+                <textarea class="form-control" name="description"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Добавить</button>
+        </form>
+    </div>
+
+    <div class="col-md-8">
+        <h4>Существующие циклы</h4>
+        <ul class="list-group">
+            {% for cycle in cycles %}
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
+                    <div class="fw-bold">{{ cycle.title_ru }} <small class="text-muted">({{ cycle.title_original }})</small></div>
+                    {{ cycle.description | default('Нет описания.', true) }}
+                </div>
+            </li>
+            {% else %}
+            <li class="list-group-item">Циклов пока нет.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

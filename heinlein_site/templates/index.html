@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-image: url('{{ url_for("static", filename="images/starship_troops_4k_49.png") }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        min-height: 100vh;
+    }
+    
+    .display-4, .lead, .text-muted a {
+        color: #fff !important;
+        text-shadow: 0 0 5px #000, 0 0 20px #000, 1px 1px 4px rgba(0,0,0,0.9);
+    }
+    .text-muted { color: rgba(255,255,255,0.8) !important; }
+
+    .container.main-content {
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .form-switch .form-check-input {
+        height: 1.6em;
+        width: 3.4em;
+    }
+    .form-check-label {
+        font-size: 0.95em;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="col-md-9 col-lg-7 text-center">
+        <h1 class="display-4 mb-4">База знаний Роберта Хайнлайна</h1>
+        <p class="lead mb-5 text-muted">Введите название произведения, оригинальное название или ключевую фразу.</p>
+        
+        <form action="{{ url_for('search') }}" method="get" class="d-flex flex-column flex-md-row gap-3 justify-content-center align-items-center">
+            <input type="text" name="q" class="form-control form-control-lg shadow-sm flex-grow-1" placeholder="Например: Луна, Starship Troopers, Лазарус..." required autofocus>
+            <div class="form-check form-switch d-flex align-items-center">
+                <input class="form-check-input" type="checkbox" id="searchModeMain" checked onchange="document.getElementById('modeHiddenMain').value = this.checked ? 'ml' : 'sql';">
+                <label class="form-check-label text-light ms-2" for="searchModeMain">Семантический / Точный</label>
+            </div>
+            <input type="hidden" name="mode" value="ml" id="modeHiddenMain">
+            <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">Найти</button>
+        </form>
+        
+        <div class="mt-4 text-muted small">
+            Попробуйте найти: 
+            <a href="{{ url_for('search', q='История будущего') }}" class="text-decoration-none">История будущего</a>, 
+            <a href="{{ url_for('search', q='Марс') }}" class="text-decoration-none">Марс</a>, 
+            <a href="{{ url_for('search', q='Starship') }}" class="text-decoration-none">Starship</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
